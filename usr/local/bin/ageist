@@ -1,0 +1,9 @@
+# old old old files are a symptom of bad DOS time uploaded from windows
+# 1980 01/01 01:01  is old enough
+TIME=198001010101
+echo "$0: looking for files older than $TIME"
+for i in /data0 /data1 /home; do
+  if [ -d $i ]; then
+    find $i -mtime +15000 -ls -exec touch -mt $TIME \{\} \;
+  fi
+done
