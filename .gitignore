@@ -1,0 +1,14 @@
+# general
+*.exe
+a.out
+*.pyc
+*.o
+*.a
+# opt is fat
+tar/opt.tar
+# tmp
+*~
+*.swp
+*.swo
+# log or *.log
+#*.log
