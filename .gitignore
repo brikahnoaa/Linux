@@ -6,6 +6,7 @@ a.out
 *.a
 # opt is fat
 tar/opt.tar
+tar/etc.tar
 # tmp
 *~
 *.swp
