@@ -1,6 +1,7 @@
 #!/bin/bash
 # backup.mirror backup of all files 
 # note: day{1,2,3,4,5,6,7} must exist at $Dst
+# v3 use algor from backup.data
 
 configured=no
 Src=/data0
@@ -23,7 +24,7 @@ if [ "$configured" != "yes" ]; then echo "$0: not configured"; exit -1; fi
 {
 echo -n "=== "
 date 
-. /etc/cron.daily/catalog /data0
+# purge day# - remote rsync rm -r #v3
 rsync -a --exclude='*' --delete-excluded $Src/ $Dst/$DayD
 echo rsync -a $Parm $Link $Src/ $Dst/$DayD 
 rsync -a $Parm $Link $Src/ $Dst/$DayD 

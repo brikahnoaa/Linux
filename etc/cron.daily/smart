@@ -3,7 +3,7 @@
 # v4 set RAID in .conf
 # v5 adjust use of smartctl
 Name=$( basename $0 )
-if [[ -r $Name.conf ]]; then . $Name.conf; else echo no $Name.conf; exit 1; fi
+if [[ -r $0.conf ]]; then . $0.conf; else echo no $0.conf; exit 1; fi
 
 # smartctl -A -d sat+megaraid,12 /dev/sda
 # smartctl -A -d 3ware,1 /dev/twa0 # 9650 
