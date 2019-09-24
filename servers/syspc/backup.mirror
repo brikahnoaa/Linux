@@ -25,7 +25,9 @@ if [ "$configured" != "yes" ]; then echo "$0: not configured"; exit -1; fi
 echo -n "=== "
 date 
 # purge day# - remote rsync rm -r #v3
-rsync -a --exclude='*' --delete-excluded $Src/ $Dst/$DayD
+#rsync -a --exclude='*' --delete-excluded $Src/
+rm -rf $Dst/$DayD
+mkdir $Dst/$DayD
 echo rsync -a $Parm $Link $Src/ $Dst/$DayD 
 rsync -a $Parm $Link $Src/ $Dst/$DayD 
 } &>> $Log

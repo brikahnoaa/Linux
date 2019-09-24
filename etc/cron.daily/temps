@@ -4,6 +4,8 @@
 # v3 0-32 raid scan
 if [[ -r $0.conf ]]; then source $0.conf; else echo $0: missing .conf; exit 1; fi
 
+# cleaner email output
+export LANG=iso-8859-1
 # reporting
 # 194 Temperature_Celsius     0x0002   206   206   000    Old_age   Always       -       29 (Min/Max 21/39)
 awkS='
