@@ -4,9 +4,8 @@ a.out
 *.pyc
 *.o
 *.a
-# opt is fat
-tar/opt.tar
-tar/etc.tar
+# tar is built
+tar/*.tar
 # tmp
 *~
 *.swp

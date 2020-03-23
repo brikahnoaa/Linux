@@ -1,18 +1,23 @@
 ## apcupsd.conf v1.1 ##
 # 
-#  for apcupsd release 3.14.10 (13 September 2011) - redhat
+#  for apcupsd release 3.14.14 (31 May 2016) - redhat
 #
 # "apcupsd" POSIX config file
+
+#
+# Note that the apcupsd daemon must be restarted in order for changes to
+# this configuration file to become active.
+#
 
 #
 # ========= General configuration parameters ============
 #
 
-# UPSNAME xxx
+UPSNAME challenger
 #   Use this to give your UPS a name in log files and such. This
 #   is particulary useful if you have multiple UPSes. This does not
 #   set the EEPROM. It should be 8 characters or less.
-UPSNAME acoustic
+#UPSNAME
 
 # UPSCABLE <cable>
 #   Defines the type of cable connecting the UPS to your computer.
@@ -24,10 +29,10 @@ UPSNAME acoustic
 #     940-0119A, 940-0127A, 940-0128A, 940-0020B,
 #     940-0020C, 940-0023A, 940-0024B, 940-0024C,
 #     940-1524C, 940-0024G, 940-0095A, 940-0095B,
-#     940-0095C, M-04-02-2000
+#     940-0095C, 940-0625A, M-04-02-2000
 #
-#UPSCABLE 940-0024C
-UPSCABLE ether
+UPSCABLE 940-0024C
+#UPSCABLE ether
 
 # To get apcupsd to work, in addition to defining the cable
 # above, you must also define a UPSTYPE, which corresponds to
@@ -77,10 +82,17 @@ UPSCABLE ether
 #                            3052. If this parameter is empty or missing, the 
 #                            default of 3052 will be used.
 #
-#UPSTYPE apcsmart
-#DEVICE /dev/ttyS0
-UPSTYPE net
-DEVICE 161.55.191.142
+# modbus    /dev/tty**       Serial device for use with newest SmartUPS models
+#                            supporting the MODBUS protocol.
+# modbus    <BLANK>          Leave the DEVICE setting blank for MODBUS over USB
+#                            or set to the serial number of the UPS to ensure 
+#                            that apcupsd binds to that particular unit
+#                            (helpful if you have more than one USB UPS).
+#
+#UPSTYPE net
+#DEVICE 161.55.191.142
+UPSTYPE apcsmart
+DEVICE /dev/ttyS0
 
 # POLLTIME <int>
 #   Interval (in seconds) at which apcupsd polls the UPS for status. This
@@ -92,7 +104,10 @@ DEVICE 161.55.191.142
 #POLLTIME 60
 
 # LOCKFILE <path to lockfile>
-#   Path for device lock file. Not used on Win32.
+#   Path for device lock file. This is the directory into which the lock file
+#   will be written. The directory must already exist; apcupsd will not create
+#   it. The actual name of the lock file is computed from DEVICE.
+#   Not used on Win32.
 LOCKFILE /var/lock
 
 # SCRIPTDIR <path to script directory>
@@ -136,10 +151,12 @@ ONBATTERYDELAY 6
 # (as reported by the UPS) is below or equal to BATTERYLEVEL, 
 # apcupsd will initiate a system shutdown.
 BATTERYLEVEL 20
+#BATTERYLEVEL 10
 
 # If during a power failure, the remaining runtime in minutes 
 # (as calculated internally by the UPS) is below or equal to MINUTES,
 # apcupsd, will initiate a system shutdown.
+#MINUTES 3
 MINUTES 8
 
 # If during a power failure, the UPS has run on batteries for TIMEOUT
@@ -159,6 +176,7 @@ TIMEOUT 0
 #  Time in seconds between annoying users to signoff prior to
 #  system shutdown. 0 disables.
 ANNOY 0
+#ANNOY 300
 
 # Initial delay after power failure before warning users to get
 # off the system.
@@ -184,7 +202,7 @@ KILLDELAY 0
 #  information server. If netstatus is on, a network information
 #  server process will be started for serving the STATUS and
 #  EVENT data over the network (used by CGI programs).
-#NETSERVER on
+NETSERVER on
 
 # NISIP <dotted notation ip address>
 #  IP address on which NIS server will listen for incoming connections.
