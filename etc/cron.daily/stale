@@ -1,0 +1,11 @@
+#!/bin/bash
+# stale: list and correct stale nfs
+stale=$( df |&  awk -F[\`\'] '/Stale/ {print $2}' )
+if [ -n "$stale" ]; then
+  echo  Stale NFS: $stale
+  for i in $stale; do
+    umount $i
+    mount $i
+  done
+fi
+
