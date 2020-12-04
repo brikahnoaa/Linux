@@ -24,11 +24,7 @@ awkS='
 # quickie
 if [[ -n "$1" ]]; then
   echo "== $1"
-  awkS='/^  5 /{printf "%d = %s ", $10, $2 }'
-  out=$( smartctl -d sat -A $1 | awk "$awkS" )
-  if [[ -n $out ]]; then
-    echo "disk $1 SATA $out"
-  fi
+  smartctl -d sat -A $1 
   exit
 fi
   
