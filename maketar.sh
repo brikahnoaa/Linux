@@ -5,7 +5,7 @@ cd $Lnx
 mkdir -p tar
 echo "rm -f tar/*.tar"
 rm -f tar/*.tar
-for i in opt etc usrlocal servers; do
+for i in opt etc usr servers; do
   echo "tar cf tar/$i.tar $i"
   tar cf tar/$i.tar $i
 done
