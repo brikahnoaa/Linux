@@ -2,8 +2,7 @@
 # backup.sys - etc root home usr/local
 # v1 parents are backup.sys.v4 and backup.data.v5
 # note: day{1,2,3,4,5,6,7} should exist at $Dst
-configured=yes
-if [ "$configured" != "yes" ]; then echo "$0: not configured"; exit -1; fi
+echo "$0: not configured"; exit -1
 
 Src="/etc /root /home /usr/local"
 # ventstore 161.55.192.7

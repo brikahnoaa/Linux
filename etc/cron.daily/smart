@@ -49,20 +49,23 @@ for i in $Sata; do
 done
 
 ## raid
-if [[ -n "$Rtype" ]]; then echo RAID $Rtype $Rdev; fi
-for (( j=0; j<32; j++ )); do
-  out=$( smartctl -d $Rtype,$j -A $Rdev | awk "$awkS" )
-  if [[ -n "$out" ]]; then
-    echo "disk $j $out"
-  fi
-done
+if [[ -n "$Rtype" ]]; then 
+  echo RAID $Rtype $Rdev
+  for (( j=0; j<32; j++ )); do
+    out=$( smartctl -d $Rtype,$j -A $Rdev | awk "$awkS" )
+    if [[ -n "$out" ]]; then
+      echo "disk $j $out"
+    fi
+  done
+fi
 
 ## raid2
-if [[ -n "$Rtype2" ]]; then echo RAID $Rtype2 $Rdev2; fi
-for (( j=0; j<32; j++ )); do
-  out=$( smartctl -d $Rtype2,$j -A $Rdev2 | awk "$awkS" )
-  if [[ -n "$out" ]]; then
-    echo "disk $j $out"
-  fi
-done
-
+if [[ -n "$Rtype2" ]]; then 
+  echo RAID $Rtype2 $Rdev2
+  for (( j=0; j<32; j++ )); do
+    out=$( smartctl -d $Rtype2,$j -A $Rdev2 | awk "$awkS" )
+    if [[ -n "$out" ]]; then
+      echo "disk $j $out"
+    fi
+  done
+fi

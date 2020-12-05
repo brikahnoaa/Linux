@@ -10,8 +10,10 @@ for i in opt etc usr servers; do
   tar cf tar/$i.tar $i
 done
 cd ~
-dots=.bash* .dir_colors .minttyrc .gitconfig .k .ssh/authorized_keys .vim/
+dots=".bash* .dir_colors .minttyrc .gitconfig .k .ssh/authorized_keys .vim"
+echo tar cf $Lnx/tar/dots.tar $dots
 tar cf $Lnx/tar/dots.tar $dots
+echo tar cf $Lnx/tar/bin.tar bin
 tar cf $Lnx/tar/bin.tar bin
 #
 echo "git clone git@github.com:brikahnoaa/Linux.git"

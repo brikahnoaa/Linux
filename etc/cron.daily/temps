@@ -34,9 +34,21 @@ for i in $Sata; do
 done
 
 ## raid
-for (( j=0; j<32; j++ )); do
-  out=$( smartctl -d $Rtype,$j -A $Rdev | awk "$awkS" )
-  if [[ -n "$out" ]]; then
-    echo "$out on disk $Rtype,$j $Rdev"
-  fi
-done
+if [[ -n "$Rtype" ]]; then
+  for (( j=0; j<32; j++ )); do
+    out=$( smartctl -d $Rtype,$j -A $Rdev | awk "$awkS" )
+    if [[ -n "$out" ]]; then
+      echo "$out on disk $Rtype,$j $Rdev"
+    fi
+  done
+fi
+
+## raid2
+if [[ -n "$Rtype2" ]]; then
+  for (( j=0; j<32; j++ )); do
+    out=$( smartctl -d $Rtype2,$j -A $Rdev2 | awk "$awkS" )
+    if [[ -n "$out" ]]; then
+      echo "$out on disk $Rtype2,$j $Rdev2"
+    fi
+  done
+fi
