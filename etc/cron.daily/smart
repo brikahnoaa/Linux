@@ -3,6 +3,14 @@
 # v4 set RAID in .conf
 # v5 adjust use of smartctl
 Name=$( basename $0 )
+
+# quickie
+if [[ -n "$1" ]]; then
+  echo "== $1"
+  smartctl -d sat -A $1 
+  exit
+fi
+  
 if [[ -r $0.conf ]]; then . $0.conf; else echo no $0.conf; exit 1; fi
 
 # smartctl -A -d sat+megaraid,12 /dev/sda
@@ -20,14 +28,6 @@ awkS='
 /^  9 /{x=$10/24/365; if (x > 4) printf "(%1.1f years) ", x }
 '
 #awkS='/^  5 /{printf "%d = %s ", $10, $2 }'
-
-# quickie
-if [[ -n "$1" ]]; then
-  echo "== $1"
-  smartctl -d sat -A $1 
-  exit
-fi
-  
 
 # figure out disks
 # smartctl --scan for AT disks, dmesg scsi# for raid controllers
