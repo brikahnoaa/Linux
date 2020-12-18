@@ -2,7 +2,7 @@
 yum -y update &> /tmp/update_message
 cat /tmp/update_message | mailx -s yum-update root 
 if grep -q samba /tmp/update_message; then
-  echo "try this:  yum --disableexcludes=samba\* update" \
+  echo "try this:  yum --disableexcludes=all update" \
       | su cnsd -c "mailx -s yum-problem root"
 fi
 rpm -qa --last > /root/rpm-qa--last
