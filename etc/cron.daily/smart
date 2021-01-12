@@ -32,6 +32,13 @@ awkS='
 # figure out disks
 # smartctl --scan for AT disks, dmesg scsi# for raid controllers
 # could use lsblk
+if [ "$Rtype" = "sat+megaraid" ]; then
+  storcli64 /c0 show | grep RAID
+fi
+if [ "$Rtype" = "3ware" ]; then
+  tw_cli /c0 show | grep RAID
+  tw_cli /c9 show | grep RAID
+fi
 
 # SATA or PATA
 Sata=$( smartctl --scan-open | awk '/ sat /{print $1}')
