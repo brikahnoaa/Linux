@@ -1,13 +1,13 @@
 #!/bin/bash
 # nfs-remount - if some nfs mounts are missing, retry
-m=$(df -t nfs | tail -n +2 | wc -l)
-f=$(cat /etc/fstab | grep -v '^#' | grep '\<nfs\>' | wc -l)
+m=$(df -t nfs -t nfs4 | tail -n +2 | wc -l)
+f=$(cat /etc/fstab | grep -v '^#' | grep '\<nfs' | wc -l)
 if [ $m -lt $f ]; then
   echo "$m nfs mounts found, $f nfs mounts in fstab"
   echo " === mounted:"
-  df -t nfs
+  df -t nfs -t nfs4
   echo " === /etc/fstab:"
-  cat /etc/fstab | grep -v '^#' | grep '\<nfs\>' 
+  cat /etc/fstab | grep -v '^#' | grep '\<nfs' 
   echo "attempting to remount."
-  mount -a -t nfs
+  mount -a -t nfs -t nfs4
 fi
