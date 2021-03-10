@@ -9,5 +9,5 @@ if [ $m -lt $f ]; then
   echo " === /etc/fstab:"
   cat /etc/fstab | grep -v '^#' | grep '\<nfs' 
   echo "attempting to remount."
-  mount -a -t nfs -t nfs4
+  mount -a -t nfs
 fi
