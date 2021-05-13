@@ -1,0 +1,10 @@
+Robert Deloura - NOAA Federal
+9:34 AM (55 minutes ago)
+Brian,
+Since I'm logging in to all of the Linux machines anyway to fix an email related problem with my scripts, I'm going to add my script that monitors /var/log/messages to the Newport systems.
+The short version is that it counts the number of lines in /var/log/messages every 15 minutes, and emails me if it finds new lines in the log file.  It's spammy to be on the receiving end, but has been a helpful tool for me in the past.
+I'll continue to leave the automated patching scripts off of your machines unless you want them, though.
+The script I'm adding is /usr/local/bin/watch, and there will be a root crontab entry for it, as well as a /usr/local/scripts directory that it keeps information in.
+
+--Robert
+

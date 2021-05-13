@@ -1,0 +1,6 @@
+#!/bin/sh
+To=brian.kahn@noaa.gov
+From="$(whoami) at $(hostname)"
+
+/usr/bin/sed "{/Subject/p;1,/^$/d}" |
+  /sbin/sendmail -F "$From" -f $To $To
