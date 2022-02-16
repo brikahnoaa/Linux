@@ -4,7 +4,7 @@
 # note: day{1,2,3,4,5,6,7} should exist at $Dst
 echo "$0: not configured"; exit -1
 
-Src="/etc /root /home /usr/local"
+Src="/etc /root /home /usr/local /var/spool/cron"
 # ventstore 161.55.192.7
 if ping -c 1 161.55.191.7 >/dev/null ; then
   Svr="161.55.191.7"
