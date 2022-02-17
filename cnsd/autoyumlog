@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+chop($NODENAME = `/bin/hostname -s`);
+$FILENAME = "/tmp/${NODENAME}.log";
+
+system("/bin/rm -f ${FILENAME}");
+system("/bin/cp /var/log/yum.log ${FILENAME}");
+
+$MESSAGE = "The most recent version of /var/log/yum.log from \u${NODENAME} is attached.";
+system("echo \"${MESSAGE}\" | /bin/mailx -s \"RHEL Patch Log - ${NODENAME}\" -a ${FILENAME} tony.h.ung\@noaa.gov");
+
+system("/bin/sleep 20");
+system("/bin/rm -f ${FILENAME}");

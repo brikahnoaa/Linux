@@ -1,0 +1,351 @@
+#!/usr/bin/perl
+#
+# Last modification date:  May 8th, 2019
+#    (modified to only run Tue and Thu morning)
+# Previous modification date:  May 20th, 2016
+#    (removed code that prevented running on Sat/Sun)
+#
+# This script runs 'yum', but only when invoked on certain days at
+# certain hours.  The goal is to do half of our patching on Tuesday morning
+# and half of our patching on Thursday morning, while also distributing our
+# patching over a five hour period on those two days, rather than having every
+# machine try to patch at the same time... while also avoiding the need to
+# make different crontab entries on every machine.  The script should be set
+# to run on Tuesdays and Thursdays, at 1:15, 2:15, 3:15, 4:15, and 5:15
+# (though the minutes don't matter), so the crontab entry looks like this:
+#
+#      15  1-5  *  *  Tue,Thu   /usr/local/bin/autoyum
+#
+# Note that if this file is not set EXECUTABLE BY ROOT (chmod 7xx), the
+# cron entry for starting it will need to be 'perl /usr/local/bin/autoyum'.
+#
+# The general program logic is as follows.
+# * Define a bunch of fixed variables, depending on value of $MODE.
+# * Check to make sure the ROOT user is invoking this, unless $MODE is set to 
+#       "TESTING".
+# * Find the current $HOUR.  Abort if it is badly formatted, or is outside
+#       the range 1-5.
+# * Find the current numeric $DATE (day of the month).  Abort if it is badly
+#       formatted or is outside the range 1-31.  Does not check for days that
+#       are not normally valid for the current month, such as 'Feb 31'.  This
+#       is currently only used as a sanity check, but was left in just in case
+#       we go back to alternating day patching in the future.
+# * Find the current $WEEKDAY (3 letter abbreviation for the day of the week).
+#       Abort if $WEEKDAY is anything other than Tue or Thu.
+# * Get the machine's IP address.  Abort if not in valid format.
+# * Parse out last byte of IP address.  Abort if not between 0 and 255.
+# * Set $DIGIT to the last digit of the last byte of the IP address.  This is
+#       used in determining what time of day (and which days) the patching
+#       should actually run.
+# * The formula (($HOUR - 1) * 2) + ($WEEKDAY eq 'Thu') returns a number 
+#       between zero and nine.  Patching is only performed if this number
+#       matches $DIGIT.
+#       This is equivalent to the following table:
+#               $HOUR             Tue              Thu
+#                1 AM              0                1
+#                2 AM              2                3
+#                3 AM              4                5
+#                4 AM              6                7
+#                5 AM              8                9
+#       Odd IP addresses patch on Thu, even IP addresses patch on Tue.
+#       Exits quietly if the current date and time are not correct for this
+#        machine to patch.
+# * Create file $TMPLOG.  If it already exists, or can't be created, abort.
+#       This is treated as a lock file to prevent multiple simultaneous runs,
+#       or runs after a run has failed.
+# * Patch YUM itself.  Log the output (stdout and stderr) to $TMPLOG.
+# * Patch everything, with a random delay of up to 10 minutes.  Log to $TMPLOG.
+# * Email the output of both patching commands ($TMPLOG) to $EMAIL_ADDR.
+# * Sleep for 20 seconds to give the email a chance to be generated.
+# * Copy the contents of $TMPLOG to $YUMLOG, for a long-term patch history.
+# * Remove $TMPLOG.
+# * (Any warning messages generated during a run are logged to $ERRLOG.)
+#
+
+# 
+# POTENTIAL ISSUES:
+# * This script could have holidays built in, to stop it from patching
+# on those days.  I'm just nervous about silently installing a broken
+# patch when nobody is due in the office that day.
+# * If a machine needs to exclude certain packages or repositories when
+# patching, it is expected that /etc/yum.conf on that machine will
+# reflect this, rather than requiring special qualifiers to the YUM
+# command.  Was originally planning to have an autoyum.config file for
+# this purpose, but decided against it for now.
+# 
+#
+# Some general configuration variables are defined here.  They should not be
+# edited by the user.
+#
+#    $MODE           'NORMAL' for regular machines that have their own
+#                         /usr/local.  'TGRID' if they share /usr/local and 
+#                         need to put local files in /opt/local instead.
+#                         'TESTING' for debugging purposes.
+#    $HOSTNAME       Short name of this machine. Not the fully qualified name.
+#                         So "weir", not "weir.pmel.noaa.gov".
+#    $TMPLOG         Full path to a filename in a directory that must be
+#                         readable and writable by this script, but not
+#                         writable by other users. Output from YUM will be
+#                         directed here.
+#    $YUMLOG         Full path to the permanent logfile, which contains copies
+#                         of all past $TMPLOGs.  It's just YUM output.
+#    $ERRLOG         Full path to the log file that tracks errors and
+#                         informational messages, without being buried in all
+#                         the output from running YUM.
+#    $MAIL_CMD       Full path to mailx, along with the Subject qualifier.
+#    $EMAIL_ADDR     Space-separated email addresses that should receive the
+#                         email notifications generated by this program, if
+#                         it is running under a particular operating system.
+#                         At signs (@) must be escaped with backslashes. (\@)
+#
+
+chop($HOSTTMP = `/bin/hostname -s`);                      # Lower-case hostname
+$HOSTNAME = sprintf("\u$HOSTTMP");               # We always use it capitalized
+
+#
+# $MODE can be "NORMAL", "TGRID", "TESTING" or "NEWPORT".
+# "NORMAL" is fine so long as the machine has its own /usr/local directory and
+#      can write to it.
+# "TGRID" is for some local machines that share /usr/local, so the script uses
+#      /opt/local for data files instead.
+# "TESTING" is for when I'm debugging the script.
+# "NEWPORT" is just like "NORMAL", except it sends to Brian Kahn as well
+#      as myself.
+#
+
+$MODE = "NORMAL";
+
+if ($MODE eq "NORMAL") {                         # Most machines
+    $TMPLOG  = "/usr/local/scripts/autoyum.tmp";
+    $YUMLOG = "/usr/local/scripts/autoyum.log";
+    $ERRLOG = "/usr/local/scripts/autoyum.err";
+    $MAIL_CMD = "/bin/mailx -s";
+    $EMAIL_ADDR = "Robert.A.DeLoura\@noaa.gov";
+} elsif ($MODE eq "TGRID") {                     # Tgrids share /usr/local
+    $TMPLOG  = "/opt/local/scripts/autoyum.tmp";
+    $YUMLOG = "/opt/local/scripts/autoyum.log";
+    $ERRLOG = "/opt/local/scripts/autoyum.err";
+    $MAIL_CMD = "/bin/mailx -s";
+    $EMAIL_ADDR = "Robert.A.DeLoura\@noaa.gov";
+} elsif ($MODE eq "TESTING") {                   # Script debugging
+    $TMPLOG  = "/home/newiidx/deloura/autoyum/autoyum.tmp";
+    $YUMLOG = "/home/newiidx/deloura/autoyum/autoyum.log";
+    $ERRLOG = "/home/newiidx/deloura/autoyum/autoyum.err";
+    $MAIL_CMD = "/bin/mailx -s";
+    $EMAIL_ADDR = "Robert.A.DeLoura\@noaa.gov";
+} elsif ($MODE eq "NEWPORT") {                   # Running on Newport systems
+    $TMPLOG  = "/usr/local/scripts/autoyum.tmp";
+    $YUMLOG = "/usr/local/scripts/autoyum.log";
+    $ERRLOG = "/usr/local/scripts/autoyum.err";
+    $MAIL_CMD = "/bin/mailx -s";
+    $EMAIL_ADDR = "Brian.Kahn\@noaa.gov Robert.A.DeLoura\@noaa.gov";
+} else {
+    &abortmail("Invalid MODE value -- ($MODE)");
+}
+
+#
+# Check to make sure this is being run by ROOT.  Abort if it isn't, unless 
+# we're running in TESTING mode.
+#
+
+chop($USERNAME = `/usr/bin/id -un`);
+
+if ($USERNAME ne "root") {
+    if ($MODE ne "TESTING") {
+	&abortmail("Must be invoked by ROOT.  Current user is ($USERNAME).  Aborting.");
+    } else {
+	&log_msg("TESTING: Invoked by non-ROOT user, USERNAME = ($USERNAME).");
+    }
+}
+
+#
+# Find the appropriate values for several variables, with some sanity checking.
+#    $HOUR = The current hour, based on a 24-hour clock.  (date +%H)
+#    $DATE = Today's numeric date, from 1 to 31.  (date +%d)
+#    $WEEKDAY = Three letter abbreviation for day of the week: 'Mon'.(date +%a)
+#
+# Could get these three variables with a single /bin/date call, if I parsed
+# the output.  But this is clearer, and the speed loss is no big deal.
+#
+
+chop($HOUR = `/bin/date +%H`);                                  # 24-hour clock
+unless ($HOUR =~ m/^\d{1,2}$/) {                           # Valid hour format?
+    &abortmail("Invalid HOUR format -- ($HOUR)");
+}
+if (($HOUR < 0) || ($HOUR > 23)) {                # Not a valid hour of the day
+    &abortmail("Invalid HOUR value -- ($HOUR)");
+}
+if (($HOUR < 1) || ($HOUR > 5)) {           # Only run between 1 AM and 5:59 AM
+    &abortmail("Invoked outside the 1 AM to 6 AM window.  Hour is ($HOUR).");
+}
+
+chop($DATE = `/bin/date +%d`);                             # Numeric date, 1-31
+unless ($DATE =~ m/^\d{1,2}$/) {                           # Valid date format?
+    &abortmail("Invalid DATE format -- ($DATE)");
+}
+if (($DATE < 1) || ($DATE > 31)) {
+    &abortmail("Invalid DATE value -- ($DATE)");
+}
+
+chop($WEEKDAY = `/bin/date +%a`);                 # 3-letter day abbrev:  'Mon'
+unless (($WEEKDAY eq "Tue") || ($WEEKDAY eq "Thu")) {
+    &abortmail("Invalid WEEKDAY value -- ($WEEKDAY)   (only runs Tue/Thu)");
+}
+
+#
+# Parse the output of 'hostname -i' to find the last digit of this machine's
+# IP address, which will be used to decide what time and day the patching
+# job should be run.  Sanity check for a valid IP address and a valid last
+# byte of that address.
+#    $IPADDR = The IP address of this machine.
+#    $LASTBYTE = The last octet of the IP address:  xxx.xxx.xxx.123
+#    $DIGIT = The last digit of $IPADDR.
+#
+
+chop($IPADDR = `/bin/hostname -i`);             # An IP address of this machine
+unless ($IPADDR =~ m/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {  # Valid IP addr?
+    &abortmail("Invalid IPADDR format -- ($IPADDR)");
+}
+($junk1,$junk2,$junk3,$LASTBYTE) = split(/\./,$IPADDR,4);    # Split by periods
+unless (($LASTBYTE >= 0) && ($LASTBYTE <= 255)) {
+    &abortmail("Invalid LASTBYTE value -- ($LASTBYTE)");
+}
+$DIGIT = $LASTBYTE % 10;                             # Digit is between 0 and 9
+
+#
+# The job should run iff (($HOUR - 1) * 2) + ($WEEKDAY eq 'Thu') matches $DIGIT
+# Not an error if started during other times, so don't send email about this.
+#
+#                       Tue              Thu
+#      1 AM              0                1
+#      2 AM              2                3
+#      3 AM              4                5
+#      4 AM              6                7
+#      5 AM              8                9
+#
+
+$PATCHTIME = (($HOUR - 1) * 2) + ($WEEKDAY eq 'Thu');
+unless ($DIGIT == $PATCHTIME) {
+    &log_msg("Not patch time.  Machine=($DIGIT), Time=($PATCHTIME)");
+    exit;                                                  # Just exit quietly.
+}
+
+#
+# All clear.  It's the right time of day, and the right (odd/even) day
+# of the month for this machine to perform patching.  Time to start.
+# First, make sure this job isn't already running, by looking for the
+# temporary file ($TMPLOG) that it creates.  If ($TMPLOG) doesn't exist,
+# create it, then check to make sure it was created successfully.
+#
+
+if (-e $TMPLOG) {
+    &abortmail("Patching aborted, $TMPLOG already exists!");
+}
+system("/bin/touch $TMPLOG");               # Doesn't need to contain anything.
+system("/bin/chmod 600 $TMPLOG");
+unless (-e $TMPLOG) {
+    &abortmail("Patching aborted, could not create $TMPLOG!");
+}
+
+#
+# Patch YUM itself first, then patch everything else.  The value of -R
+# randomizes the start of the job by up to that many minutes, to keep
+# too many machines from deciding to patch at exactly the same time.
+# The 'echo' lines here are just for formatting purposes in the log, to
+# make it easier to read.
+#
+
+system("echo '' >> $TMPLOG");
+system("echo '---------------------------------------------------------------------------' >> $TMPLOG");
+chop($TIMESTAMP = `/bin/date`);
+system("echo 'Running YUM UPDATE YUM at $TIMESTAMP' >> $TMPLOG");
+system("echo '' >> $TMPLOG");
+
+if ($MODE eq "TESTING") {
+    &log_msg("TESTING: Would normally patch YUM here, if needed.");
+} else {
+    &log_msg("Started patching yum (if necessary).");
+    system("/usr/bin/yum -e 0 -d 1 -y update yum >> $TMPLOG 2>&1");
+    &log_msg("Finished patching yum (if necessary).");
+}
+
+system("echo '' >> $TMPLOG");
+chop($TIMESTAMP = `/bin/date`);
+system("echo 'Running YUM UPDATE at $TIMESTAMP' >> $TMPLOG");
+system("echo '' >> $TMPLOG");
+
+if ($MODE eq "TESTING") {
+    &log_msg("TESTING: Would normally patch $HOSTNAME here.");
+} else {
+    &log_msg("Started patching $HOSTNAME.");
+    system("/usr/bin/yum -R 10 -e 0 -d 1 -y update >> $TMPLOG 2>&1");
+    &log_msg("Finished patching $HOSTNAME.");
+}
+
+#
+# Send out the email message, wait 20 seconds (to avoid deleting $TMPLOG before
+# the mail message has gone out), append $TMPLOG to $YUMLOG, and then delete
+# $TMPLOG.
+#
+
+&log_msg("Sending email.");
+system("/bin/cat $TMPLOG | $MAIL_CMD \"AUTOYUM: $HOSTNAME\" $EMAIL_ADDR");
+system("/bin/sleep 20");
+system("/bin/cat $TMPLOG >> $YUMLOG");
+system("/bin/rm -f $TMPLOG");
+
+&log_msg("Autoyum has finished.");
+&log_msg("============================================================");
+
+exit;
+
+#
+# Subroutines go at the bottom.
+#
+
+sub abortmail
+#
+# This subroutine expects a string as a parameter: the error message to
+# report.  There is no sanity checking of the string.  Sends out email
+# explaining that an error has occurred, and also logs the error to
+# $ERRLOG via &log_msg, then aborts this script.
+# Abortmail uses 'die' for its own errors, to prevent infinite recursion.
+#
+{
+    local($ERRMSG) = $_[0];
+    local($TIMESTAMP) = `/bin/date +"%b %d %T"`;
+
+    chop($TIMESTAMP);
+
+    &log_msg($ERRMSG);
+
+    unless (open(MAIL,"| $MAIL_CMD \"\*\*\* AUTOYUM FAILURE: $HOSTNAME \*\*\*\" $EMAIL_ADDR")) {
+	&log_msg("Couldn't open MAIL to send 'abortmail' warning message!");
+	die "Couldn't open MAIL to send 'abortmail' warning message on $HOSTNAME!\n";
+    }
+
+    print MAIL "AUTOYUM exited with an error on $HOSTNAME at $TIMESTAMP\n$ERRMSG\n";
+
+    unless (close(MAIL)) {
+        &log_msg("Couldn't close MAIL when sending 'abortmail' warning message!");
+	die "Couldn't close MAIL when sending 'abortmail' warning message on $HOSTNAME!\n";
+    }
+
+    exit;
+}
+
+sub log_msg
+# 
+# This subroutine logs informational messages (mostly errors) to
+# $ERRLOG.  It expects a string as a parameter: the error message to
+# report.  There is no sanity checking of the string.  The string and a
+# timestamp are logged to $ERRLOG.
+# 
+{
+    local($ERRMSG) = $_[0];
+    local($TIMESTAMP) = `/bin/date +"%b %d %T"`;
+
+    chop($TIMESTAMP);
+
+    system("echo '$TIMESTAMP - $ERRMSG' >> $ERRLOG");
+}

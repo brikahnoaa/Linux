@@ -3,11 +3,20 @@
 # v4 set RAID in .conf
 # v5 adjust use of smartctl
 Name=$( basename $0 )
+
+# quickie
+if [[ -n "$1" ]]; then
+  echo "== $1"
+  smartctl -d sat -A $1 
+  exit
+fi
+  
 if [[ -r $0.conf ]]; then . $0.conf; else echo no $0.conf; exit 1; fi
 
 # smartctl -A -d sat+megaraid,12 /dev/sda
 # smartctl -A -d 3ware,1 /dev/twa0 # 9650 
 # smartctl -A -d 3ware,1 /dev/twl0 # 9750 
+# smartctl -d sat -A /dev/sda
 
 # reporting
 # 5 Reallocated_Sector_Ct   0x0033   001   001   005    Pre-fail  Always   FAILING_NOW 1990
@@ -21,17 +30,18 @@ awkS='
 '
 #awkS='/^  5 /{printf "%d = %s ", $10, $2 }'
 
-# quickie
-if [[ -n "$1" ]]; then
-  echo "== $1"
-  smartctl -d sat -A $1 
-  exit
-fi
-  
-
 # figure out disks
 # smartctl --scan for AT disks, dmesg scsi# for raid controllers
 # could use lsblk
+if [ "$Rtype" = "sat+megaraid" ]; then
+  /usr/local/bin/storcli64 /c0 show | grep RAID
+fi
+if [ "$Rtype" = "3ware" ]; then
+  /usr/local/bin/tw_cli /c${Rcntl:=0} show | grep RAID
+fi
+if [ "$Rtype2" = "3ware" ]; then
+  /usr/local/bin/tw_cli /c${Rcntl2:=0} show | grep RAID
+fi
 
 # SATA or PATA
 Sata=$( smartctl --scan-open | awk '/ sat /{print $1}')
@@ -59,13 +69,3 @@ if [[ -n "$Rtype" ]]; then
   done
 fi
 
-## raid2
-if [[ -n "$Rtype2" ]]; then 
-  echo RAID $Rtype2 $Rdev2
-  for (( j=0; j<32; j++ )); do
-    out=$( smartctl -d $Rtype2,$j -A $Rdev2 | awk "$awkS" )
-    if [[ -n "$out" ]]; then
-      echo "disk $j $out"
-    fi
-  done
-fi

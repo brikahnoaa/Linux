@@ -1,8 +1,8 @@
 #!/bin/sh
-yum -y update &> /tmp/update_message
-cat /tmp/update_message | mailx -s yum-update root 
-if grep -q samba /tmp/update_message; then
-  echo "try this:  yum --disableexcludes=samba\* update" \
-      | su cnsd -c "mailx -s yum-problem root"
+tmp=/tmp/update_message
+yum -y --exclude=samba* update &> $tmp
+cat $tmp | mailx -s yum-update root 
+if ! yum check-updates; then
+  grep samba $tmp | mailx -s "$(hostname -s) urgent : yum samba updates" root
 fi
 rpm -qa --last > /root/rpm-qa--last
