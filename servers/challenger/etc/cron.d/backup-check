@@ -1,0 +1,2 @@
+# Run backup check at 10am
+10 10 * * * root /usr/local/sbin/backup-check
