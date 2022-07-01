@@ -5,7 +5,7 @@ sendto="brian.kahn@noaa.gov"
 # day of week yesterday
 d=$(date +%u)
 # mon day today
-md=$(date +'%b %d')
+md=$(date +'%b %e')
 for i in /backup/*/day$d; do
   # backup date
   bmd=$(ls -ld $i | cut -d' ' -f6,7)
