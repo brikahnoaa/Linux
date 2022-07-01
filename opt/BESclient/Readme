@@ -1,7 +1,7 @@
  mkdir -p /var/opt/BESClient/ /etc/opt/BESClient/ /opt/BESClient/bin/
- cp besclient.config /var/opt/BESClient
+ cp besclient.config /var/opt/BESClient/
  cp actionsite.afxm /etc/opt/BESClient/
  cp dcid.skey /opt/BESClient/bin/
- rpm -ivh *64.rpm
- service besclient start  #   systemctl start besclient
+ yum install BESAgent
+ # service besclient start  #   systemctl start besclient
  tail –f $( echo /var/opt/BESClient/__BESData/__Global/Logs/*.log )
