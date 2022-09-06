@@ -1,0 +1,17 @@
+#!/bin/bash
+# send alert if a day's backup is missed
+sendto="brian.kahn@noaa.gov"
+#
+# day of week yesterday
+d=$(date +%u)
+# mon day today
+md=$(date +'%b %e')
+for i in /backup/*/day$d; do
+  # backup date
+  bmd=$(ls -ld $i | cut -d' ' -f6,7)
+  if [ "$md" != "$bmd" ]; then
+    subj="missed backup $md $i"
+    mess=$(ls -ld /backup/*/day$d)
+    echo "$mess" | mailx -s "$subj" -r brian.kahn@noaa.gov $sendto
+  fi
+done

@@ -9,6 +9,8 @@ Banner /etc/ssh/sshd_banner
 ChallengeResponseAuthentication no
 GSSAPIAuthentication yes
 GSSAPICleanupCredentials yes
+GSSAPIEnablek5users yes
+GSSAPIKeyExchange yes
 PasswordAuthentication yes
 PermitRootLogin no
 PrintMotd no
