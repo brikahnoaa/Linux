@@ -34,13 +34,13 @@ awkS='
 # smartctl --scan for AT disks, dmesg scsi# for raid controllers
 # could use lsblk
 if [ "$Rtype" = "sat+megaraid" ]; then
-  /usr/local/bin/storcli64 /c0 show | grep RAID
+  /usr/local/sbin/storcli64 /c0 show | sed -ne '/VD LIST/,/Consist=/p'
 fi
 if [ "$Rtype" = "3ware" ]; then
-  /usr/local/bin/tw_cli /c${Rcntl:=0} show | grep RAID
+  /usr/local/sbin/tw_cli /c${Rcntl:=0} show | grep RAID
 fi
 if [ "$Rtype2" = "3ware" ]; then
-  /usr/local/bin/tw_cli /c${Rcntl2:=0} show | grep RAID
+  /usr/local/sbin/tw_cli /c${Rcntl2:=0} show | grep RAID
 fi
 
 # SATA or PATA
