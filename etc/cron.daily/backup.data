@@ -6,13 +6,15 @@
 # v13 link-dest is relative to dest
 # v14 algor: backup if ctime and not in tapeL0 (new), or mtime (mod)
 # v15 purge day#/ to avoid tweaking permissions on linked files
-# v16 multiple Dest
+# v16 (abandoned, multi source v22) multiple Dest
 # v17 purge better than v15, use .conf file
 # v18 algor: backup if not in tapeL0 (new), or mtime (mod)
 # v19 sort order, default is not LC_COLLATE=C when run from cron
 # v20 report failure
-if [[ -r $0.conf ]]; then source $0.conf; else echo $0: missing .conf; exit 1; fi
-# .conf sets these vars: Src Dest When
+# v21 interactive - if $#  and  if tty
+# v22 Srcs can be a list of Src dirs
+# .conf sets these vars: Srcs Dest When
+if [[ -r $0.conf ]]; then . $0.conf; else echo $0: missing .conf; exit 1; fi
 
 Name=$( basename $0 )
 # day of week
@@ -21,9 +23,9 @@ Day="$( date +%u )"
 DayD="day$Day"
 # day prev, yesterday
 DayP="day$(( ($Day+5)%7+1 ))"
-Cat=$Src/.catalog
 Parm="--stats"
-# this path is relative to $Dst
+if [[ $# -gt 0 ]]; then Parm="$1 $Parm"; fi  # v21
+# this path is relative to $Dest
 Link="--link-dest=../$DayP"
 # sort order to match root interactive shell environ
 export LC_COLLATE=C
@@ -31,36 +33,42 @@ export LC_COLLATE=C
 # notes:
 # remove leading and trailing / from backup list, and sort
 #  backup lists in challenger:/var/lib/amanda/full/index/*/*/
-# LC_COLLATE=C zcat 20*.gz | sed 's|^/||; s|/$||' | sort > $Cat/tapeL0
+# LC_COLLATE=C zcat *.gz | sed 's|^/||; s|/$||' | sort > $Cat/tapeL0
 # day{1,2,3,4,5,6,7} should exist at $Dst
 
 # calculate days since tape backup
 secs=$(( $(date '+%s') - $(date '+%s' -d "$When") ))
 days=$(( secs / 86400 ))
 
-# check if backup list is sorted v19
-if ! sort -C $Cat/tapeL0; then
-  sort $Cat/tapeL0 > $Cat/tmp
-  /bin/mv -f $Cat/tmp $Cat/tapeL0
-fi
+# interactive? v21
+tty=$(tty)
 
-# use sed to remove leading pathname from find
-Sed="s|^$Src/*||"
-# v18 algor: backup if not in tapeL0 (new), or mtime (mod)
-find $Src/ -type f | sed "$Sed" | sort > $Cat/all
-find $Src/ -type f -a -mtime -$days | sed "$Sed" | sort > $Cat/mod
-comm -2 -3 $Cat/all $Cat/tapeL0 > $Cat/new
-cat $Cat/mod $Cat/new | sort -u > $Cat/fifr
+# v17 purge day# 
+rsync -a --exclude='*' --delete --delete-excluded $Src/ $Dest/$DayD
 
-# v16 multiple Dest, ac and e2 store on local and cr backup
-for Dst in $Dest; do 
+# v22 multiple Src
+for Src in $Srcs; do
+  Cat=$Src/.catalog
+  # check if backup list is sorted v19
+  if ! sort -C $Cat/tapeL0; then
+    sort $Cat/tapeL0 > $Cat/tmp
+    /bin/mv -f $Cat/tmp $Cat/tapeL0
+  fi
+
   echo -n "=== "
   date 
-  # v17 purge day#/ to avoid tweaking permissions on linked files
-  rsync -a --exclude='*' --delete-excluded $Src/ $Dst/$DayD
-  echo rsync -a --files-from=$Cat/fifr $Parm $Link $Src/ $Dst/$DayD 
-  rsync -a --files-from=$Cat/fifr $Parm $Link $Src/ $Dst/$DayD 
+  # use sed to remove leading pathname from find
+  Sed="s|^$Src/*||"
+  # v18 algor: backup if not in tapeL0 (new), or mtime (mod)
+  find $Src/ -type f | sed "$Sed" | sort > $Cat/all
+  find $Src/ -type f -a -mtime -$days | sed "$Sed" | sort > $Cat/mod
+  comm -2 -3 $Cat/all $Cat/tapeL0 > $Cat/new
+  cat $Cat/mod $Cat/new | sort -u > $Cat/fifr
+
+  echo rsync -a --files-from=$Cat/fifr $Parm $Link $Src/ $Dest/$DayD 
+  rsync -a --files-from=$Cat/fifr $Parm $Link $Src/ $Dest/$DayD 
   echo "rsync returns $?"
 done &> /tmp/$Name.log
 
 cat /tmp/$Name.log >> /var/log/$Name.log
+if [ "$tty" != "not a tty" ]; then cat /tmp/$Name.log; fi
