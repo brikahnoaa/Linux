@@ -13,6 +13,10 @@
 # v20 report failure
 # v21 interactive - if $#  and  if tty
 # v22 Srcs can be a list of Src dirs
+## notes:
+## symlinks to dirs (cross-links) are replaced if real directories come later
+##   so order matters Dirs="/data0 /data1 /data2"
+## -L --copy-links When symlink, use the item that they point to
 # .conf sets these vars: Srcs Dest When
 if [[ -r $0.conf ]]; then . $0.conf; else echo $0: missing .conf; exit 1; fi
 
