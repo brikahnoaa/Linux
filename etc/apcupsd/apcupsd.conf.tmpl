@@ -31,8 +31,8 @@ UPSNAME challenger
 #     940-1524C, 940-0024G, 940-0095A, 940-0095B,
 #     940-0095C, 940-0625A, M-04-02-2000
 #
-UPSCABLE 940-0024C
-#UPSCABLE ether
+#UPSCABLE 940-0024C
+UPSCABLE ether
 
 # To get apcupsd to work, in addition to defining the cable
 # above, you must also define a UPSTYPE, which corresponds to
@@ -89,10 +89,10 @@ UPSCABLE 940-0024C
 #                            that apcupsd binds to that particular unit
 #                            (helpful if you have more than one USB UPS).
 #
-#UPSTYPE net
-#DEVICE 161.55.191.142
-UPSTYPE apcsmart
-DEVICE /dev/ttyS0
+UPSTYPE net
+DEVICE challenger
+#UPSTYPE apcsmart
+#DEVICE /dev/ttyS0
 
 # POLLTIME <int>
 #   Interval (in seconds) at which apcupsd polls the UPS for status. This
