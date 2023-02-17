@@ -12,3 +12,4 @@ tar/*.tar
 *.swo
 # log or *.log
 #*.log
+arc
