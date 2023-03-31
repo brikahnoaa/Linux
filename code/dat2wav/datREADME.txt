@@ -14,30 +14,32 @@ The output from   python3 dat2wav.py --help is shown below.
 To convert all the .dat or .DAT files in the current directory to .wav, do
   python3 dat2wav.py *.*
 
-usage: dat2wav.py [-n NAME] [-d DAT_DIR] [-h HDR_DIR] [-w WAV_DIR]
-                  [--datetime] [--help] [--no-wav] [--verbose]
+usage: dat2wav.py [-h] [-n NAME] [-D DAT_DIR] [-H HDR_DIR] [-W WAV_DIR]
+                  [--datetime] [--no-wav] [-v]
                   file [file ...]
 
 convert .DAT format to .wav format
 
 positional arguments:
-  file        directory, files or filespecs; required
+  file                  directory, files or filespecs; required
 
 optional arguments:
-  -n NAME     prefix for output names, as name_date_time.wav
-  -d DAT_DIR  read .dat files from this directory; default=.
-  -h HDR_DIR  write .hdr files in this directory; default=no headers
-  -w WAV_DIR  write .wav files in this directory; default=.
-  --datetime  print yyyymmdd_hhmmss from .dat header and exit
-  --help      print help message and exit
-  --no-wav    do not create wav files (use with HDR_DIR)
-  --verbose   increase output text; default=quiet
+  -h, --help            show this help message and exit
+  -n NAME, --name NAME  prefix for output names, as name_date_time.wav
+  -D DAT_DIR, --dat-dir DAT_DIR
+                        read .dat files from this directory; default=.
+  -H HDR_DIR, --hdr-dir HDR_DIR
+                        write .hdr files in this directory; default=no headers
+  -W WAV_DIR, --wav-dir WAV_DIR
+                        write .wav files in this directory; default=.
+  --datetime            print yyyymmdd_hhmmss from .dat header and exit
+  --no-wav              do not create wav files (use with --hdr-dir)
+  -v, --verbose         increase output text; default=quiet
 
 examples:
   python3 dat2wav.py 00000000.DAT 00000001.DAT    #make 2 .wav files
   python3 dat2wav.py *009[89].DAT 0000010?.DAT    #make 12 .wav files
   python3 dat2wav.py -H headers .    #make .wav here, .hdr in a subdir
-
 
 advanced hints:
 .1 a four hour 138MB .DAT file takes 30 seconds to convert on a low end PC
@@ -48,5 +50,3 @@ advanced hints:
 .4 a DAT file can be recreated from a WAV and a HDR (with the same base name)
 .5 --name option is a prefix to the wav filenames, or a complete name spec
    if the NAME argument includes date/time %format (see linux, man date)
-
-# developed by Brian Kahn for NOAA 2023

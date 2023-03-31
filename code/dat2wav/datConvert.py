@@ -1,11 +1,9 @@
 #! python3
 # functions to translate between .dat and .wav formats
 # see notes at end of file
-# developed by Brian Kahn for NOAA 2023
 ###
 import os
 import wave
-import argparse
 from datetime import timedelta, datetime
 from struct import unpack_from, pack_into
 # 
@@ -30,7 +28,7 @@ def datDatetime(datH, round=True):
     datDT+=timedelta(seconds=0.5)
   return datDT
 #
-def dat2wav(datF, hdrD=None, wavD=None, wavFmt=wavFmtDefault):
+def dat2wav(datF, hdrD=None, wavD=None, wavFmt=wavFmtDefault, v=0):
   """ convert .dat file to .wav file and .hdr file in curdir
   read dat header, dat data; hdr datetime; convert data; save [.hdr] .wav
   note: does not overwrite existing files
@@ -47,26 +45,33 @@ def dat2wav(datF, hdrD=None, wavD=None, wavFmt=wavFmtDefault):
     outF=datDatetime(datH).strftime(wavFmt)
     if hdrD:
       # save .hdr 
-      name = os.path.join(hdrD, outF+".hdr")
-      if not os.path.isfile(name): # do not overwrite
-        with open(name, "wb") as h:
+      hdrName = os.path.join(hdrD, outF+".hdr")
+      if os.path.isfile(hdrName): # do not overwrite
+        if v>0: print(hdrName, "exists, no overwrite")
+      else:
+        with open(hdrName, "wb") as h:
           h.write(datH) 
     if wavD:
       # rest of file is data
-      name = os.path.join(wavD, outF+".wav")
-      if not os.path.isfile(name): # do not overwrite
-        data=bytearray(f.read())
-        ## 2do: QC: expect 1 channel, 16 bit data; unsigned big-endian
-        # convert data: 16bit unsigned bigend -> 16bit signed little
-        for i in range(0, len(data), 2):
-          x=unpack_from(">H", data, i)[0]-32768
-          pack_into("<h", data, i, x)
-        ## datChannels=unpack_from(">H", datH, 194)[0]
-        with wave.open(name, "wb") as w:
-          w.setnchannels(1)
-          w.setsampwidth(2)
-          w.setframerate(datSampRate)
-          w.writeframes(data)
+      wavName = os.path.join(wavD, outF+".wav")
+      if os.path.isfile(wavName): # do not overwrite
+        if v>0: print(wavName, "exists, no overwrite")
+        return("")
+      if v>1: print("reading")
+      data=bytearray(f.read())
+      ## 2do: QC: expect 1 channel, 16 bit data; unsigned big-endian
+      # convert data: 16bit unsigned bigend -> 16bit signed little
+      if v>1: print("converting")
+      for i in range(0, len(data), 2):
+        x=unpack_from(">H", data, i)[0]-32768
+        pack_into("<h", data, i, x)
+      ## datChannels=unpack_from(">H", datH, 194)[0]
+      if v>1: print("writing")
+      with wave.open(wavName, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(datSampRate)
+        w.writeframes(data)
   return(outF)
 #
 def wav2dat(wavF, datF):
@@ -106,6 +111,11 @@ def datDateStr(path, wavFmt=wavFmtDefault):
 #
 ###
 # notes
+# v1.0 blk works
+# v1.1 refined cmdline
+# v2.0 blk release
+# v2.1 blk v=verbose, no overwrite more efficient
+#
 # This code uses the date, time from DAT header (v3)
 # all NRS data have samprate of (about) 5000, 16bit 0-2.5volt
 # most of the hdr is ignored, this is why we save hdr separate

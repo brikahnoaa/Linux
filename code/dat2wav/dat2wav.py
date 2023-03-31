@@ -2,7 +2,6 @@
 # convert .dat to .wav format
 # this file just does the command line arg processing and error checks
 # the dat conversion functions are in the imported module datConvert
-# developed by Brian Kahn for NOAA 2023
 ###
 import sys
 from os import mkdir, listdir
@@ -44,7 +43,7 @@ def cmdLineArgs():
     help="print help message and exit") 
   parser.add_argument('--no-wav', action='store_true',
     help="do not create wav files (use with HDR_DIR)")
-  parser.add_argument('--verbose', action='count', default=0,
+  parser.add_argument('-v', '--verbose', action='count', default=0,
     help="increase output text; default=quiet")
   #clargs = argparse.Namespace(usageStr=parser.format_usage())
   clargs = argparse.Namespace()
@@ -54,7 +53,6 @@ def cmdLineArgs():
 def go():
   """parse cmd line, take actions
   """
-  global wavFmtDefault
   clargs, parser = cmdLineArgs()
   v = clargs.verbose
   if v>1: print(clargs)
@@ -133,12 +131,17 @@ def go():
     if hdrD: print("Writing hdr files in %s" % hdrD)
     if wavD: print("Writing wav files in %s" % wavD)
   for f in files:
-    w = datConvert.dat2wav(f, hdrD=hdrD, wavD=wavD, wavFmt=wavFmt)
+    w = datConvert.dat2wav(f, hdrD=hdrD, wavD=wavD, wavFmt=wavFmt, v=v)
     if v>0: print(f,w)
   exit(0)
 
 go()
 
-### python notes
+### notes
+# v1.0 blk works
+# v1.1 refined cmdline
+# v2.0 blk release
+# v2.1 blk v=verbose, no overwrite more efficient
+#
 # os.path.join(path, abspath)->abspath  # pretty smart!
 # flat_list = [item for sublist in l for item in sublist]
