@@ -1,0 +1,28 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Tue Dec 15 13:00:59 2020
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/cl_caldera-root /                       xfs     defaults        0 0
+UUID=a276bb46-fd10-426b-bec3-a7c8c75753fd /boot                   xfs     defaults        0 0
+/dev/mapper/cl_caldera-home /home                   xfs     defaults        0 0
+/dev/mapper/cl_caldera-swap swap                    swap    defaults        0 0
+
+syspc:/data0         /syspc       nfs     defaults,bg     1 1
+#syspc:/internet         /internet       nfs     defaults,bg     1 1
+#syspc:/ftpdata          /ftpdata        nfs     defaults,bg     1 1
+#syspc:/data             /data           nfs     defaults,bg     1 1
+#syspc:/tphase           /tphase         nfs     defaults,bg     1 1
+#syspc:/disk1            /disk1          nfs     defaults,bg     1 1
+#syspc:/disk4            /disk4          nfs     defaults,bg     1 1
+acoustic:/data/programs  /scroll        nfs     defaults,bg       1 1
+acoustic:/data/GLOC     /GLOC   nfs             defaults,bg       1 1
+acoustic:/data/ANT      /ANT    nfs             defaults,bg       1 1
+acoustic:/data/EPR      /EPR    nfs             defaults,bg       1 1
+acoustic:/data/MAR      /MAR    nfs             defaults,bg       1 1
+
+/dev/mapper/VolGroup00-LogVol02  /backup ext4 defaults,noauto 2 2
+/dev/mapper/VolGroup00-LogVol00  /backup/home ext4 defaults,noauto 3 3

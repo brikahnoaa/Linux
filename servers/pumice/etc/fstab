@@ -1,0 +1,23 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Fri May 27 17:20:01 2022
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/cl-root         /                   xfs     defaults        0 0
+UUID=fd93fb88-c48b-4c99-b8b6-97c74b264a57 /boot xfs     defaults        0 0
+UUID=EA87-1D81              /boot/efi           vfat    umask=0077,shortname=winnt 0 0
+/dev/mapper/cl-home         /home               xfs     defaults        0 0
+/dev/mapper/cl-swap         swap                swap    defaults        0 0
+
+#embfile2:/data0/mdisk       /e2/mdisk           nfs     defaults  0 0
+#embfile2:/data0/multibeam   /e2/multibeam       nfs     defaults  0 0
+embfile2:/mdisk         /mdisk          nfs     bg,intr,user       0 0
+embfile2:/multibeam     /multibeam      nfs     bg,intr,user       0 0
+#embfile2:/gis-data     /gis-data       nfs     bg,intr,user       0 0
+#syspc:/geo              /geo            nfs     bg,intr,user       0 0
+#syspc:/bathy            /bathy          nfs     bg,intr,user       0 0
+#syspc:/ftpdata/pub      /ftpdata        nfs     bg,intr,user       0 0
+syspc:/data0      /syspc        nfs     bg,intr,user       0 0

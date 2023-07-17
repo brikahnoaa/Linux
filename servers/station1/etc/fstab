@@ -1,0 +1,22 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Fri Nov 27 08:26:35 2020
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/cl_station1-root /                       xfs     defaults 0 0
+UUID=29aa4a03-de38-4fcc-adf2-a4c23346bc5b /boot      xfs     defaults 0 0
+/dev/mapper/cl_station1-home /home                   xfs     defaults 0 0
+/dev/mapper/cl_station1-swap swap                    swap    defaults 0 0
+LABEL=data0 /data0                              xfs     defaults,nofail 1 1
+##
+acoustic:/data /adata  nfs      user,nosuid,nodev,intr,noatime  0 0
+syspc:/data0   /syspc nfs      user,nosuid,nodev,intr,noatime       0 0
+#syspc:/group/tphase   /tphase nfs      user,nosuid,nodev,intr,noatime       0 0
+##
+#/dev/sdc3 /backup   ext3  defaults,noauto 0 0
+#/dev/sdc5 /backup/s1/usr   ext3  defaults,noauto 0 0
+#/dev/sdc6 /backup/s1/usr/local   ext3  defaults,noauto 0 0
+#/dev/sdc9 /backup/s1/home   ext3  defaults,noauto 0 0

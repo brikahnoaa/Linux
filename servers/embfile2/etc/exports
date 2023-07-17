@@ -1,0 +1,6 @@
+#/mdisk   *.pmel.noaa.gov(async,insecure,rw) #161.55.192.0/255.255.255.0(rw) 161.55.191.0/255.255.255.0(rw)
+#/mdata   *.pmel.noaa.gov(rw,sync,insecure)  #161.55.192.0/255.255.255.0(rw) 161.55.191.0/255.255.255.0(rw)
+/mdisk   yang(async,insecure,rw) pumice(async,insecure,rw) 
+/multibeam   yang(async,insecure,rw) syspc(async,insecure,rw) pumice(async,insecure,rw)
+#/back   yang(async,insecure,rw) 
+#/cr-bup 161.55.191.3(ro,no_root_squash) 161.55.192.3(ro,no_root_squash)

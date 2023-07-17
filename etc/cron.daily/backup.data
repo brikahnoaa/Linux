@@ -13,6 +13,7 @@
 # v20 report failure
 # v21 interactive - if $#  and  if tty
 # v22 Srcs can be a list of Src dirs
+# v23 error checks
 ## notes:
 ## symlinks to dirs (cross-links) are replaced if real directories come later
 ##   so order matters Dirs="/data0 /data1 /data2"
@@ -53,6 +54,11 @@ rsync -a --exclude='*' --delete --delete-excluded $Src/ $Dest/$DayD
 # v22 multiple Src
 for Src in $Srcs; do
   Cat=$Src/.catalog
+  # v23 err
+  if [ ! -r $Cat/tapeL0 ]; then
+    echo err: no $Cat/tapeL0
+    continue
+  fi
   # check if backup list is sorted v19
   if ! sort -C $Cat/tapeL0; then
     sort $Cat/tapeL0 > $Cat/tmp

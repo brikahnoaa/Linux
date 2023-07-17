@@ -1,0 +1,19 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Thu Jan  2 02:13:55 2020
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/rhel_acoustic-root /                   xfs     defaults        0 0
+UUID=5675e962-4dd6-4cc3-ac22-7507979b9fac /boot    xfs     defaults        0 0
+UUID=2583-D216          /boot/efi        vfat    umask=0077,shortname=winnt 0 0
+/dev/mapper/rhel_acoustic-home /home               xfs     defaults        0 0
+/dev/mapper/rhel_acoustic-swap swap                swap    defaults        0 0
+
+LABEL=data0             /vd0          xfs     defaults        2 2
+#LABEL=raid-vd1            /vd1          xfs     defaults,nofail 2 2
+
+syspc:/data0         /syspc       nfs     user,bg,intr    2 2
+#syspc:/internet         /internet       nfs     user,bg,intr    2 2
