@@ -10,4 +10,4 @@ for i in opt etc usr servers; do
   tar cf tar/$i.tar $i
 done
 #
-echo "git clone git@github.com:brikahnoaa/Linux.git"
+echo "hint: git clone git@github.com:brikahnoaa/Linux.git"
