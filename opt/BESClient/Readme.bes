@@ -1,0 +1,15 @@
+# /usr/bin/rm -rf /opt/BESClient
+# /usr/bin/mv BESClient /opt
+# cd /opt/BESClient
+ /usr/bin/systemctl stop besclient  
+ /usr/bin/rpm -evh BESAgent
+ /usr/bin/rm -rf /var/opt/BESClient /etc/opt/BESClient /opt/BESClient/bin
+ mkdir -p /var/opt/BESClient /etc/opt/BESClient /opt/BESClient/bin
+ /bin/cp besclient.config /var/opt/BESClient/
+ /bin/cp actionsite.afxm /etc/opt/BESClient/
+ /bin/cp dcid.skey /opt/BESClient/bin/
+ /usr/bin/rpm -ivh *64.rpm
+ /usr/bin/systemctl start besclient  
+ sleep 3
+ cat /var/opt/BESClient/__BESData/__Global/Logs/* | tail
+
