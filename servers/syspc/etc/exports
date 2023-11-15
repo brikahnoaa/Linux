@@ -1,4 +1,5 @@
 /data0 161.55.192.0/24(rw,secure,sync)
+/users/kahn 161.55.192.200(rw,insecure,sync)
 #/bathy 161.55.192.0/24(rw,secure,sync)
 #/chem 161.55.192.0/24(rw,secure,sync)
 #/disk1 161.55.192.0/24(rw,secure,sync)
