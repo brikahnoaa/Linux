@@ -5,11 +5,12 @@ a.out
 *.o
 *.a
 # tar is built
-tar/*.tar
+tar/*
+dots.tar
 # tmp
 *~
 *.swp
 *.swo
 # log or *.log
 #*.log
-arc
+arc/
