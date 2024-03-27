@@ -6,7 +6,6 @@ a.out
 *.a
 # tar is built
 tar/*
-dots.tar
 # tmp
 *~
 *.swp
