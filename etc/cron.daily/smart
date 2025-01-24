@@ -4,14 +4,19 @@
 # v5 adjust use of smartctl
 Name=$( basename $0 )
 
+if [[ -r $0.conf ]]; then . $0.conf; else echo no $0.conf; exit 1; fi
+
 # quickie
-if [[ -n "$1" ]]; then
-  echo "== $1"
-  smartctl -d sat -A $1 
+if [[ "$1" == /dev/* ]]; then
+  echo " smartctl -d sat -A $1 "
+  smartctl -d sat -A $1
   exit
 fi
-  
-if [[ -r $0.conf ]]; then . $0.conf; else echo no $0.conf; exit 1; fi
+if [[ "$1" == [0-9]* ]]; then
+  echo " smartctl -d $Rtype,$1 -A $Rdev"
+  smartctl -d $Rtype,$1 -A $Rdev
+  exit
+fi
 
 # smartctl -A -d sat+megaraid,12 /dev/sda
 # smartctl -A -d 3ware,1 /dev/twa0 # 9650 
